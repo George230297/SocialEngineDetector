@@ -1,9 +1,11 @@
+from functools import lru_cache
 from fastapi import APIRouter, Depends
 from src.domain.schemas import ScanRequest, ScanResult
 from src.services.orchestrator import AnalysisOrchestrator
 
 router = APIRouter()
 
+@lru_cache()
 def get_orchestrator() -> AnalysisOrchestrator:
     return AnalysisOrchestrator()
 

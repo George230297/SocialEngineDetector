@@ -1,65 +1,161 @@
 # Social Engineering Detector
 
-## Descripción
+> **Una capa de defensa inteligente contra ataques de Ingeniería Social.**
 
-**Social Engineering Detector** es una API de ciberseguridad avanzada diseñada para detectar y mitigar amenazas de Ingeniería Social. Construida sobre **Python** y **FastAPI**, esta herramienta analiza diversos artefactos digitales (actualmente URLs, con capacidad extensible para texto, imágenes y audio) para identificar indicadores de riesgo asociados con ataques de phishing, smishing y otras técnicas de manipulación.
+[![Python 3.11](https://img.shields.io/badge/Python-3.11-blue.svg)](https://www.python.org/downloads/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.109.0-009688.svg)](https://fastapi.tiangolo.com)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg)](https://www.docker.com/)
+[![Tests](https://img.shields.io/badge/Tests-Passing-green.svg)](tests/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-El proyecto sigue estrictamente los principios de **Clean Architecture** (Arquitectura Limpia) y utiliza patrones de diseño como **Strategy** para permitir una escalabilidad modular y mantenible.
+## 📋 Descripción General
 
-## Objetivo
+**Social Engineering Detector** es una API de ciberseguridad avanzada diseñada para operar como una **capa de defensa proactiva** ante amenazas de Ingeniería Social.
 
-El objetivo principal de esta herramienta es proporcionar una capa de defensa automatizada e inteligente que pueda evaluar en tiempo real la peligrosidad de elementos sospechosos antes de que un usuario interactúe con ellos. Busca reducir la superficie de ataque humana alertando sobre posibles vectores de ingeniería social.
+Su objetivo principal es **proteger al usuario final** analizando artefactos digitales (como URLs, correos electrónicos o mensajes SMS) en tiempo real para identificar intentos de manipulación, fraude o Phishing antes de que ocurra una interacción peligrosa.
 
-## Características Clave
+Este proyecto ha sido construido bajo los principios de **Arquitectura Limpia (Clean Architecture)** y el **Ciclo de Desarrollo de Software Seguro (SSDLC)**, lo que garantiza no solo una detección eficaz, sino también un sistema mantenible, escalable y auditable.
 
-- **Arquitectura Limpia:** Separación clara de responsabilidades en capas (Dominio, Casos de Uso/Servicios, Infraestructura/API).
-- **Orquestación de Motores de Análisis:** Sistema flexible que selecciona dinámicamente el motor de análisis adecuado según el tipo de artefacto (URL, TEXTO, etc.).
-- **Análisis Heurístico de URLs:** Detección basada en reglas como longitud excesiva, uso de IPs directas y palabras clave sospechosas.
-- **API RESTful:** Endpoints documentados automáticamente con OpenAPI (Swagger UI).
-- **Docker Ready:** Configuración lista para despliegue en contenedores optimizados para producción.
+### ¿Para qué sirve?
 
-## Estructura del Proyecto
+- **Detección Temprana:** Identifica enlaces sospechosos o maliciosos basándose en heurísticas avanzadas y patrones de ataque conocidos.
+- **Análisis Automatizado:** Procesa grandes volúmenes de solicitudes sin intervención humana gracias a su arquitectura asíncrona.
+- **Integración de Seguridad:** Sirve como backend de análisis para clientes de correo, navegadores o sistemas SIEM corporativos.
+
+---
+
+## 🚀 Características Clave (Novedades)
+
+- **Arquitectura Limpia:** Estricta separación de responsabilidades que facilita la evolución del software sin deuda técnica.
+- **Rendimiento Asíncrono:** Migración completa a `httpx` y `async/await` para evitar bloqueos bajo alta concurrencia.
+- **Observabilidad Completa:** Sistema de **Logging Estructurado** (vía `loguru`) que permite auditoría forense y depuración en producción.
+- **Alta Calidad (Testing):** Suite de pruebas automatizadas (Unitarias e Integración) con `pytest` para garantizar la estabilidad del código.
+- **Seguridad por Diseño:** Middleware de seguridad configurado y manejo responsable de secretos.
+- **Patrón Strategy:** Motor de análisis extensible. Agregar soporte para nuevos tipos de amenazas es tan simple como implementar una nueva "Estrategia".
+- **Docker Ready:** Listo para despliegue contenerizado seguro.
+
+---
+
+## 🏗️ Arquitectura del Sistema
+
+El sistema actúa como un **orquestador inteligente** que recibe artefactos y delega el análisis al motor más apropiado.
+
+Graph TD:
+`Cliente -> API (FastAPI) -> Orquestador -> Motores de Análisis -> Resultado`
+
+### Capas del Proyecto
+
+1.  **Domain (`src/domain`):** Modelos de datos y reglas de negocio puras.
+2.  **Services (`src/services`):** Lógica aplicativa, Orquestador y Motores de Análisis (Heurísticos, ML, etc.).
+3.  **API (`src/api`):** Controladores REST, inyección de dependencias y validación de esquemas.
+4.  **Core (`src/core`):** Configuración transversal, Logging y Utilidades.
+
+---
+
+## 🛠️ Estructura del Proyecto
 
 ```text
-src/
-├── api/             # Capa de presentación (Endpoints)
-├── core/            # Configuración global y utilidades
-├── domain/          # Modelos de datos y reglas de negocio (Schemas, Enums)
-├── services/        # Lógica de negocio y orquestación
-│   ├── analysis_engines/  # Motores de análisis (Strategy Pattern)
-│   └── orchestrator.py    # Orquestador de servicios
-└── main.py          # Punto de entrada de la aplicación
+social_eng_detector/
+├── src/
+│   ├── api/                 # Endpoints y Rutas
+│   ├── core/                # Configuración y Logging
+│   ├── domain/              # Modelos (Schemas)
+│   ├── services/            # Lógica de Negocio (Orquestador y Motores)
+│   └── main.py              # Punto de entrada de la aplicación
+├── tests/                   # Suite de Pruebas Automatizadas
+├── Dockerfile               # Configuración de Contenedor
+├── requirements.txt         # Dependencias Modernas (httpx, loguru, fastapi)
+└── README.md                # Documentación del Proyecto
 ```
 
-## Tecnologías
+---
 
-- **Python 3.11**
-- **FastAPI**
-- **Pydantic V2**
-- **Uvicorn**
-- **Docker**
+## 💻 Instalación y Uso
 
-## Cómo Ejecutar
+### Prerrequisitos
 
-### Localmente
+- Python 3.11+
+- Docker (Opcional)
 
-1.  Instala las dependencias:
+### Ejecución Local
+
+1.  **Clonar e instalar dependencias:**
+
     ```bash
+    git clone <repo-url>
+    cd social_eng_detector
+    python -m venv venv
+    source venv/bin/activate  # Windows: venv\Scripts\activate
     pip install -r requirements.txt
     ```
-2.  Ejecuta el servidor:
+
+2.  **Iniciar el servidor:**
+
     ```bash
     python src/main.py
     ```
-3.  Accede a la documentación en: `http://localhost:8000/docs`
 
-### Con Docker
+    El servidor iniciará en `http://localhost:8000`.
 
-1.  Construye la imagen:
+3.  **Ejecutar Pruebas (Nuevo):**
+    Para verificar que todo funciona correctamente:
     ```bash
-    docker build -t social-eng-detector .
+    pytest
     ```
-2.  Ejecuta el contenedor:
-    ```bash
-    docker run -p 8000:8000 social-eng-detector
-    ```
+
+### Docker (Recomendado)
+
+```bash
+docker build -t social-eng-detector .
+docker run -p 8000:8000 social-eng-detector
+```
+
+---
+
+## 📡 Uso de la API
+
+**POST** `/api/v1/scan/analyze`
+
+**Request:**
+
+```json
+{
+  "artifact_type": "URL",
+  "content": "http://paypal-secure-update.com.login.php"
+}
+```
+
+**Response:**
+
+```json
+{
+  "risk_score": 85,
+  "risk_level": "MALICIOUS",
+  "findings": [
+    "Longitud de URL sospechosa",
+    "Palabras clave sensibles detectadas"
+  ]
+}
+```
+
+---
+
+## 🔮 Roadmap
+
+- [x] **Fase 1:** Análisis Heurístico de URLs y Arquitectura Base.
+- [x] **Fase 1.5:** Hardening (Testing, Logging, Async performance).
+- [ ] **Fase 2:** Análisis de Texto Natural (NLP) para detección de Smishing.
+- [ ] **Fase 3:** Integración con Threat Intelligence (VirusTotal).
+
+---
+
+## ⚠️ Aviso Legal
+
+**Social Engineering Detector** es una herramienta educativa y defensiva.  
+Su uso para atacar sistemas sin consentimiento es ilegal. Los desarrolladores no se hacen responsables del mal uso de este software.
+
+---
+
+## 👨‍💻 Autor
+
+Desarrollado con ❤️ para una internet más segura.

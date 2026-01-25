@@ -3,6 +3,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     PROJECT_NAME: str = "social-eng-detector"
     API_VERSION: str = "v1"
+    API_V1_STR: str = "/api/v1"
     
     # Simulación de API Keys (pueden venir de variables de entorno)
     VIRUSTOTAL_API_KEY: str = "vt-simulated-key-12345"
