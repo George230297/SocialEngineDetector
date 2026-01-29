@@ -34,6 +34,14 @@ Este proyecto ha sido construido bajo los principios de **Arquitectura Limpia (C
 - **Patrón Strategy:** Motor de análisis extensible. Agregar soporte para nuevos tipos de amenazas es tan simple como implementar una nueva "Estrategia".
 - **Docker Ready:** Listo para despliegue contenerizado seguro.
 
+### 🛡️ Mejoras Recientes (Security & Architecture Hardening)
+
+- **Gestión de Secretos:** Implementación de `SecretStr` para manejo seguro de credenciales. Las API Keys ya no están hardcoded.
+- **CORS Estricto:** Configuración robusta de CORS validando orígenes permitidos mediante `BACKEND_CORS_ORIGINS`.
+- **Inyección de Dependencias:** Refactorización del Orquestador para un acoplamiento débil, facilitando pruebas y mantenibilidad.
+- **Dependencias Pinneadas:** `requirements.txt` con versiones fijas para garantizar construcciones reproducibles y seguras.
+- **Validación Estricta:** Schemas de Pydantic reforzados para sanitización de entradas.
+
 ---
 
 ## 🏗️ Arquitectura del Sistema
@@ -81,6 +89,18 @@ social_eng_detector/
 
 1.  **Clonar e instalar dependencias:**
 
+2.  **Configuración de Entorno (IMPORTANTE):**
+    Crear un archivo `.env` en la raíz basado en el siguiente ejemplo:
+
+    ```ini
+    VIRUSTOTAL_API_KEY=tu_api_key_real
+    OPENAI_API_KEY=tu_api_key_real
+    # Lista JSON de orígenes permitidos para CORS
+    BACKEND_CORS_ORIGINS=["http://localhost:3000", "http://localhost:8000"]
+    ```
+
+3.  **Instalar dependencias:**
+
     ```bash
     git clone <repo-url>
     cd social_eng_detector
@@ -89,7 +109,7 @@ social_eng_detector/
     pip install -r requirements.txt
     ```
 
-2.  **Iniciar el servidor:**
+4.  **Iniciar el servidor:**
 
     ```bash
     python src/main.py
@@ -97,7 +117,7 @@ social_eng_detector/
 
     El servidor iniciará en `http://localhost:8000`.
 
-3.  **Ejecutar Pruebas (Nuevo):**
+5.  **Ejecutar Pruebas (Nuevo):**
     Para verificar que todo funciona correctamente:
     ```bash
     pytest
@@ -136,6 +156,39 @@ docker run -p 8000:8000 social-eng-detector
     "Palabras clave sensibles detectadas"
   ]
 }
+```
+
+---
+
+## 💻 Comandos de Prueba
+
+Puedes probar la API directamente desde tu terminal.
+
+**Opción 1: cURL (Linux/Mac/Git Bash)**
+
+```bash
+curl -X 'POST' \
+  'http://localhost:8000/api/v1/scan/analyze' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "artifact_type": "URL",
+  "content": "http://paypal-secure-update.com.login.php"
+}'
+```
+
+**Opción 2: PowerShell (Windows)**
+
+```powershell
+$body = @{
+    artifact_type = "URL"
+    content = "http://paypal-secure-update.com.login.php"
+} | ConvertTo-Json
+
+Invoke-RestMethod -Uri "http://localhost:8000/api/v1/scan/analyze" `
+    -Method Post `
+    -ContentType "application/json" `
+    -Body $body
 ```
 
 ---

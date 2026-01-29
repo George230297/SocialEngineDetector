@@ -2,12 +2,17 @@ from functools import lru_cache
 from fastapi import APIRouter, Depends
 from src.domain.schemas import ScanRequest, ScanResult
 from src.services.orchestrator import AnalysisOrchestrator
+from src.services.analysis_engines.url_engine import UrlAnalysisEngine
 
 router = APIRouter()
 
 @lru_cache()
 def get_orchestrator() -> AnalysisOrchestrator:
-    return AnalysisOrchestrator()
+    # Factory for engines - in a real app this might be more complex or use a DI framework
+    engines = [
+        UrlAnalysisEngine()
+    ]
+    return AnalysisOrchestrator(engines=engines)
 
 @router.post(
     "/analyze",

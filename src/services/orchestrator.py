@@ -5,10 +5,8 @@ from src.services.analysis_engines.base import AnalysisEngine
 from src.services.analysis_engines.url_engine import UrlAnalysisEngine
 
 class AnalysisOrchestrator:
-    def __init__(self):
-        self.engines: List[AnalysisEngine] = [
-            UrlAnalysisEngine()
-        ]
+    def __init__(self, engines: List[AnalysisEngine]):
+        self.engines = engines
 
     async def analyze_artifact(self, request: ScanRequest) -> ScanResult:
         for engine in self.engines:

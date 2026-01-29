@@ -35,4 +35,5 @@ def setup_logging():
         logging.getLogger(name).propagate = True
 
     # configure loguru
-    logger.configure(handlers=[{"sink": sys.stdout, "serialize": False}])
+    # In production, you might want to load this from settings.LOG_JSON_FORMAT
+    logger.configure(handlers=[{"sink": sys.stdout, "serialize": True}])
