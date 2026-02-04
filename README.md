@@ -197,8 +197,52 @@ Invoke-RestMethod -Uri "http://localhost:8000/api/v1/scan/analyze" `
 
 - [x] **Fase 1:** Análisis Heurístico de URLs y Arquitectura Base.
 - [x] **Fase 1.5:** Hardening (Testing, Logging, Async performance).
-- [ ] **Fase 2:** Análisis de Texto Natural (NLP) para detección de Smishing.
+- [x] **Fase 2:** Análisis de Texto Natural (NLP) usando **Patrón Strategy** para detección de ingeniería social.
 - [ ] **Fase 3:** Integración con Threat Intelligence (VirusTotal).
+
+---
+
+## 🧠 Nueva Funcionalidad: Motor de Detección de Texto (Strategy Pattern)
+
+Hemos implementado un sistema flexible basado en el **Patrón de Diseño Strategy** para analizar intentos de manipulación psicológica en textos.
+
+### Estrategias Incluidas:
+
+1.  **🚨 UrgencyDetectionStrategy:** Detecta lenguaje de urgencia o miedo (ej. "acción requerida", "inmediato") para presionar a la víctima.
+2.  **👔 AuthorityImpersonationStrategy:** Identifica intentos de suplantación de identidad de altos cargos (CEO, RRHH, TI) combinados con exigencias.
+3.  **🔗 MaliciousLinkStrategy:** Extrae y analiza URLs en el texto, detectando ofuscación y estructuras sospechosas.
+
+### Ejemplo de Uso (Python):
+
+```python
+from src.services.analysis_engines.text_analysis import (
+    SocialEngineeringScanner, UrgencyDetectionStrategy,
+    AuthorityImpersonationStrategy, MaliciousLinkStrategy
+)
+
+# 1. Definir estrategias a usar
+strategies = [
+    UrgencyDetectionStrategy(),
+    AuthorityImpersonationStrategy(),
+    MaliciousLinkStrategy()
+]
+
+# 2. Inicializar el escáner
+scanner = SocialEngineeringScanner(strategies)
+
+# 3. Analizar texto sospechoso
+result = scanner.scan_text("URGENTE: Soy el CEO, transfiere fondos a http://banco-falso.com")
+
+print(f"Riesgo: {result['risk_level']}") # CRITICAL
+```
+
+### ✅ Robustez y Testing
+
+El módulo cuenta con una suite de pruebas exhaustiva (`tests/test_text_analysis.py`) que verifica:
+
+- **Entradas vacías o nulas:** Manejo seguro sin errores.
+- **Falsos positivos:** Uso de límites de palabras (Regex boundaries) para evitar coincidencias parciales (ej. "insurgente" ≠ "urgente").
+- **Acumulación de riesgo:** Puntuación dinámica basada en múltiples factores.
 
 ---
 
