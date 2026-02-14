@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends
 from src.domain.schemas import ScanRequest, ScanResult
 from src.services.orchestrator import AnalysisOrchestrator
 from src.services.analysis_engines.url_engine import UrlAnalysisEngine
+from src.services.analysis_engines.text_analysis import TextAnalysisEngine
 
 router = APIRouter()
 
@@ -10,7 +11,8 @@ router = APIRouter()
 def get_orchestrator() -> AnalysisOrchestrator:
     # Factory for engines - in a real app this might be more complex or use a DI framework
     engines = [
-        UrlAnalysisEngine()
+        UrlAnalysisEngine(),
+        TextAnalysisEngine()
     ]
     return AnalysisOrchestrator(engines=engines)
 

@@ -34,6 +34,15 @@ Este proyecto ha sido construido bajo los principios de **Arquitectura Limpia (C
 - **Patrón Strategy:** Motor de análisis extensible. Agregar soporte para nuevos tipos de amenazas es tan simple como implementar una nueva "Estrategia".
 - **Docker Ready:** Listo para despliegue contenerizado seguro.
 
+### ✨ Últimos Cambios Implementados
+
+Hemos realizado actualizaciones críticas para mejorar la robustez y facilidad de uso:
+
+1.  **Integración de Análisis de Texto:** Se ha conectado el motor de análisis de texto (Strategy Pattern) con la API principal. Ahora el endpoint `/analyze` soporta `artifact_type: "TEXT"`.
+2.  **Gestión de Dependencias:** Corrección de problemas de compatibilidad en Windows/Python 3.12+ ajustando versiones de `pydantic`.
+3.  **Licenciamiento:** Adición del archivo `LICENSE` (MIT) para claridad legal.
+4.  **Testing Reforzado:** Nuevas pruebas de integración para validar la detección de urgencia en textos.
+
 ### 🛡️ Mejoras Recientes (Security & Architecture Hardening)
 
 - **Gestión de Secretos:** Implementación de `SecretStr` para manejo seguro de credenciales. Las API Keys ya no están hardcoded.
@@ -50,6 +59,25 @@ El sistema actúa como un **orquestador inteligente** que recibe artefactos y de
 
 Graph TD:
 `Cliente -> API (FastAPI) -> Orquestador -> Motores de Análisis -> Resultado`
+
+### 📐 Patrones de Diseño Utilizados
+
+El proyecto implementa patrones de diseño robustos para garantizar flexibilidad y mantenibilidad:
+
+1.  **Strategy Pattern (Análisis de Texto):**
+    - **Contexto:** `SocialEngineeringScanner`
+    - **Interfaz:** `IAnalysisStrategy`
+    - **Estrategias Concretas:**
+      - `UrgencyDetectionStrategy`: Detecta lenguaje de urgencia.
+      - `AuthorityImpersonationStrategy`: Detecta suplantación de identidad.
+      - `MaliciousLinkStrategy`: Analiza enlaces peligrosos.
+    - _Beneficio:_ Permite agregar nuevas reglas de detección sin modificar el escáner principal.
+
+2.  **Adapter Pattern (Integración de Motores):**
+    - **Adaptador:** `TextAnalysisEngine`
+    - **Adaptado:** `SocialEngineeringScanner`
+    - **Objetivo:** `AnalysisOrchestrator`
+    - _Beneficio:_ Permite que el motor de texto (que tiene su propia interfaz) funcione dentro del orquestador genérico del sistema.
 
 ### Capas del Proyecto
 
@@ -87,37 +115,55 @@ social_eng_detector/
 
 ### Ejecución Local
 
-1.  **Clonar e instalar dependencias:**
+1.  **Clonar el repositorio:**
 
-2.  **Configuración de Entorno (IMPORTANTE):**
-    Crear un archivo `.env` en la raíz basado en el siguiente ejemplo:
+    ```bash
+    git clone https://github.com/George230297/social_eng_detector.git
+    cd social_eng_detector
+    ```
 
-    ```ini
-    VIRUSTOTAL_API_KEY=tu_api_key_real
-    OPENAI_API_KEY=tu_api_key_real
-    # Lista JSON de orígenes permitidos para CORS
-    BACKEND_CORS_ORIGINS=["http://localhost:3000", "http://localhost:8000"]
+2.  **Configurar entorno virtual:**
+
+    ```bash
+    python -m venv .venv
+    # Windows
+    .venv\Scripts\activate
+    # Linux/Mac
+    source .venv/bin/activate
     ```
 
 3.  **Instalar dependencias:**
 
     ```bash
-    git clone <repo-url>
-    cd social_eng_detector
-    python -m venv venv
-    source venv/bin/activate  # Windows: venv\Scripts\activate
     pip install -r requirements.txt
     ```
 
-4.  **Iniciar el servidor:**
+4.  **Configurar variables de entorno:**
+    Crea un archivo `.env` en la raíz (puedes copiar el ejemplo):
+
+    ```ini
+    PROJECT_NAME=social-eng-detector
+    API_VERSION=v1
+    VIRUSTOTAL_API_KEY=tu_api_key
+    OPENAI_API_KEY=tu_api_key
+    BACKEND_CORS_ORIGINS=["http://localhost:3000"]
+    ```
+
+5.  **Ejecutar pruebas (Opcional pero recomendado):**
+
+    ```bash
+    python -m pytest
+    ```
+
+6.  **Iniciar el servidor:**
 
     ```bash
     python src/main.py
     ```
 
-    El servidor iniciará en `http://localhost:8000`.
+    El servidor iniciará en `http://localhost:8000`. Documentación interactiva en `http://localhost:8000/docs`.
 
-5.  **Ejecutar Pruebas (Nuevo):**
+7.  **Ejecutar Pruebas (Nuevo):**
     Para verificar que todo funciona correctamente:
     ```bash
     pytest

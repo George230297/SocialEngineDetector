@@ -1,6 +1,8 @@
 import re
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any
+from src.services.analysis_engines.base import AnalysisEngine
+from src.domain.schemas import ArtifactType, ScanRequest, ScanResult
 
 class IAnalysisStrategy(ABC):
     """
@@ -187,3 +189,41 @@ class SocialEngineeringScanner:
         elif score > 0.1:
             return "MEDIUM"
         return "LOW"
+
+class TextAnalysisEngine(AnalysisEngine):
+    """
+    Adapter for SocialEngineeringScanner to fit into AnalysisOrchestrator.
+    """
+    def __init__(self):
+        strategies = [
+            UrgencyDetectionStrategy(),
+            AuthorityImpersonationStrategy(),
+            MaliciousLinkStrategy()
+        ]
+        self.scanner = SocialEngineeringScanner(strategies)
+
+    def supports(self, artifact_type: ArtifactType) -> bool:
+        return artifact_type == ArtifactType.TEXT
+
+    async def scan(self, request: ScanRequest) -> ScanResult:
+        # validacion de seguridad adicional
+        if request.artifact_type != ArtifactType.TEXT:
+             raise ValueError("Unsupported artifact type for TextAnalysisEngine")
+
+        report = self.scanner.scan_text(request.content)
+        
+        # Map internal risk definition to Schema RiskLevel
+        internal_level = report["risk_level"]
+        if internal_level == "LOW":
+            schema_level = "SAFE"
+        elif internal_level == "MEDIUM":
+             schema_level = "SUSPICIOUS"
+        else: # HIGH, CRITICAL
+             schema_level = "MALICIOUS"
+
+        return ScanResult(
+            risk_score=int(report["risk_score"] * 100), # Convert 0.0-1.0 to 0-100
+            risk_level=schema_level,
+            findings=report["findings"]
+        )
+

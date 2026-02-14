@@ -30,3 +30,16 @@ async def test_analyze_url_malicious(client: AsyncClient):
     data = response.json()
     assert data["risk_level"] in ["SUSPICIOUS", "MALICIOUS"]
     assert data["risk_score"] > 0
+
+@pytest.mark.asyncio
+async def test_analyze_text_urgency(client: AsyncClient):
+    payload = {
+        "artifact_type": "TEXT",
+        "content": "URGENTE: Envia tu contraseña al CEO inmediatamente."
+    }
+    response = await client.post("/api/v1/scan/analyze", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["risk_level"] == "MALICIOUS"
+    assert data["risk_score"] > 50
+    assert any("urgente" in finding.lower() for finding in data["findings"])
