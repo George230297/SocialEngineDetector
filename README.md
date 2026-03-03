@@ -65,29 +65,60 @@ Graph TD:
 
 ### 📐 Patrones de Diseño Utilizados
 
-El proyecto implementa patrones de diseño robustos para garantizar flexibilidad y mantenibilidad:
+El sistema actúa como un **orquestador inteligente** que recibe artefactos y delega el análisis al motor más apropiado. A continuación se presenta un diagrama UML de clases que ilustra la jerarquía del proyecto y el modelo subyacente de sus motores.
 
-1.  **Strategy Pattern (Análisis de Texto):**
-    - **Contexto:** `SocialEngineeringScanner`
-    - **Interfaz:** `IAnalysisStrategy`
-    - **Estrategias Concretas:**
-      - `UrgencyDetectionStrategy`: Detecta lenguaje de urgencia.
-      - `AuthorityImpersonationStrategy`: Detecta suplantación de identidad.
-      - `MaliciousLinkStrategy`: Analiza enlaces peligrosos.
-    - _Beneficio:_ Permite agregar nuevas reglas de detección sin modificar el escáner principal.
+```mermaid
+classDiagram
+    %% Capa API
+    class APIEndpoint {
+        +POST /analyze
+    }
 
-2.  **Adapter Pattern (Integración de Motores):**
-    - **Adaptador:** `TextAnalysisEngine`
-    - **Adaptado:** `SocialEngineeringScanner`
-    - **Objetivo:** `AnalysisOrchestrator`
-    - _Beneficio:_ Permite que el motor de texto (que tiene su propia interfaz) funcione dentro del orquestador genérico del sistema.
+    %% Capa Orquestador
+    class AnalysisOrchestrator {
+        +analyze_artifact(request)
+    }
 
-### Capas del Proyecto
+    %% Capa Adapters / Motores
+    class TextAnalysisEngine {
+        +analyze(content)
+    }
 
-1.  **Domain (`src/domain`):** Modelos de datos y reglas de negocio puras.
-2.  **Services (`src/services`):** Lógica aplicativa, Orquestador y Motores de Análisis (Heurísticos, ML, etc.).
-3.  **API (`src/api`):** Controladores REST, inyección de dependencias y validación de esquemas.
-4.  **Core (`src/core`):** Configuración transversal, Logging y Utilidades.
+    %% Core del Scanner (Contexto de la Estrategia)
+    class SocialEngineeringScanner {
+        -strategies : List~IAnalysisStrategy~
+        +scan_text(text)
+    }
+
+    %% Interfaz Base
+    class IAnalysisStrategy {
+        <<interface>>
+        +analyze(text)
+    }
+
+    %% Estrategias Concretas
+    class UrgencyDetectionStrategy {
+        +analyze(text)
+    }
+    class AuthorityImpersonationStrategy {
+        +analyze(text)
+    }
+    class MaliciousLinkStrategy {
+        +analyze(text)
+    }
+    class ObfuscationDetectionStrategy {
+        +analyze(text)
+    }
+
+    APIEndpoint --> AnalysisOrchestrator : Invoca
+    AnalysisOrchestrator --> TextAnalysisEngine : Delega (si es texto)
+    TextAnalysisEngine --> SocialEngineeringScanner : Envuelve (Adapter)
+    SocialEngineeringScanner o-- IAnalysisStrategy : Utiliza
+    IAnalysisStrategy <|-- UrgencyDetectionStrategy : Implementa
+    IAnalysisStrategy <|-- AuthorityImpersonationStrategy : Implementa
+    IAnalysisStrategy <|-- MaliciousLinkStrategy : Implementa
+    IAnalysisStrategy <|-- ObfuscationDetectionStrategy : Implementa
+```
 
 ---
 
