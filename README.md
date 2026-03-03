@@ -206,8 +206,8 @@ social_eng_detector/
 ### Docker (Recomendado)
 
 ```bash
-docker build -t social-eng-detector .
-docker run -p 8000:8000 social-eng-detector
+docker build -t SocialEngineDetector 
+docker run -p 8000:8000 SocialEngineDetector
 ```
 
 ---
