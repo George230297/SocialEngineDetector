@@ -1,8 +1,28 @@
 import re
+import unicodedata
+from difflib import SequenceMatcher
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any
 from src.services.analysis_engines.base import AnalysisEngine
 from src.domain.schemas import ArtifactType, ScanRequest, ScanResult
+
+def normalize_text(text: str) -> str:
+    """Removes invisible characters, normalizes unicode, and standardizes spacing."""
+    if not text: return ""
+    # Normalize unicode (e.g., standardizes visually similar characters)
+    text = unicodedata.normalize('NFKC', text)
+    # Remove non-printable characters and zero-width spaces
+    text = re.sub(r'[\u200b-\u200f\u202a-\u202e\ufeff]', '', text)
+    # Replace any punctuation with space for semantic matching
+    text = re.sub(r'[^\w\s]', ' ', text)
+    # Standardize whitespace
+    text = re.sub(r'\s+', ' ', text).strip()
+    return text.lower()
+
+def is_fuzzy_match(word: str, target: str, threshold: float = 0.8) -> bool:
+    # Use simple SequenceMatcher for fuzzy comparison
+    ratio = SequenceMatcher(None, word, target).ratio()
+    return ratio >= threshold
 
 class IAnalysisStrategy(ABC):
     """
@@ -28,10 +48,10 @@ class UrgencyDetectionStrategy(IAnalysisStrategy):
     """
     def __init__(self):
         self.findings = []
-        # Keywords indicating urgency or fear using word boundaries
-        self.keywords = [
-            r"\burgente\b", r"\binmediato\b", r"\bacción requerida\b", r"\bbloqueo\b", r"\bsuspendida\b",
-            r"\bcancelación\b", r"\bahora\b", r"\bya\b", r"\blímite\b", r"\badvertencia\b"
+        # Keywords indicating urgency or fear
+        self.targets = [
+            "urgente", "inmediato", "accion", "requerida", "bloqueo", "suspendida",
+            "cancelacion", "ahora", "limite", "advertencia"
         ]
 
     def analyze(self, text: str) -> float:
@@ -39,15 +59,17 @@ class UrgencyDetectionStrategy(IAnalysisStrategy):
         if not text: return 0.0
         
         score = 0.0
-        lower_text = text.lower()
+        normalized = normalize_text(text)
+        words = normalized.split()
         
         match_count = 0
-        for pattern in self.keywords:
-            if re.search(pattern, lower_text):
-                # Clean pattern for display
-                display_pattern = pattern.replace(r"\b", "")
-                self.findings.append(f"Detected urgency keyword: '{display_pattern}'")
-                match_count += 1
+        for target in self.targets:
+            # Check for exact matches or fuzzy matches to handle slight obfuscations/typos
+            for word in words:
+                 if is_fuzzy_match(word, target, 0.85):
+                     self.findings.append(f"Detected potential urgency term: '{target}' (matched '{word}')")
+                     match_count += 1
+                     break
         
         # Simple scoring logic: more matches = higher score, capped at 1.0
         if match_count > 0:
@@ -64,14 +86,12 @@ class AuthorityImpersonationStrategy(IAnalysisStrategy):
     """
     def __init__(self):
         self.findings = []
-        # Roles with word boundaries
         self.roles = [
-            r"\bceo\b", r"\bdirector\b", r"\bgerente\b", r"\brrhh\b", r"\brecursos humanos\b",
-            r"\bdepartamento de ti\b", r"\bseguridad\b", r"\bbanco\b", r"\bsoporte técnico\b",
-            r"\badministrador\b"
+            "ceo", "director", "gerente", "rrhh", "recursos", "humanos",
+            "departamento", "seguridad", "banco", "soporte", "tecnico", "administrador"
         ]
         self.demands = [
-            r"\benvía\b", r"\btransfiere\b", r"\bcontraseña\b", r"\bacceso\b", r"\bpago\b", r"\bfactura\b"
+            "envia", "transfiere", "contrasena", "acceso", "pago", "factura", "verificar"
         ]
 
     def analyze(self, text: str) -> float:
@@ -79,23 +99,26 @@ class AuthorityImpersonationStrategy(IAnalysisStrategy):
         if not text: return 0.0
 
         score = 0.0
-        lower_text = text.lower()
+        normalized = normalize_text(text)
+        words = normalized.split()
         
         has_role = False
         for role in self.roles:
-            if re.search(role, lower_text):
-                has_role = True
-                display_role = role.replace(r"\b", "")
-                self.findings.append(f"Detected authority role claim: '{display_role}'")
-                break
+            for word in words:
+                if is_fuzzy_match(word, role, 0.85):
+                    has_role = True
+                    self.findings.append(f"Detected authority role claim: related to '{role}'")
+                    break
+            if has_role: break
         
         has_demand = False
         for demand in self.demands:
-            if re.search(demand, lower_text):
-                has_demand = True
-                display_demand = demand.replace(r"\b", "")
-                self.findings.append(f"Detected demand language: '{display_demand}'")
-                break
+            for word in words:
+                if is_fuzzy_match(word, demand, 0.85):
+                    has_demand = True
+                    self.findings.append(f"Detected demand language: related to '{demand}'")
+                    break
+            if has_demand: break
 
         if has_role:
             score += 0.4
@@ -132,7 +155,7 @@ class MaliciousLinkStrategy(IAnalysisStrategy):
             if "@" in url:
                 self.findings.append(f"Suspicious URL structure (contains '@'): {url}")
                 score += 0.8
-            elif text.count('.') > 3 and "domain" not in url: # Crude check for obsession
+            elif url.count('.') > 3 and "domain" not in url: # Crude check for obfuscation/subdomains
                 self.findings.append(f"Potential complex/obfuscated URL: {url}")
                 score += 0.4
             else:
@@ -141,6 +164,40 @@ class MaliciousLinkStrategy(IAnalysisStrategy):
                  
         return min(score, 1.0)
 
+    def get_findings(self) -> List[str]:
+        return self.findings
+
+class ObfuscationDetectionStrategy(IAnalysisStrategy):
+    """
+    Detects structural anomalies in the text like excessive invisible characters or irregular spacing.
+    """
+    def __init__(self):
+        self.findings = []
+    
+    def analyze(self, text: str) -> float:
+        self.findings = []
+        if not text: return 0.0
+        
+        score = 0.0
+        
+        # Check for zero-width characters
+        zw_chars = re.findall(r'[\u200b-\u200f\u202a-\u202e\ufeff]', text)
+        if zw_chars:
+            self.findings.append(f"Detected {len(zw_chars)} hidden/zero-width formatting characters.")
+            score += 0.4
+            
+        # Check for excessive spacing between letters (e.g., "u r g e n t e")
+        if re.search(r'([a-zA-Z]\s){4,}[a-zA-Z]', text):
+            self.findings.append("Detected irregular spacing indicative of filter evasion.")
+            score += 0.3
+            
+        # Check for mixed alphabets (e.g. Cyrillic and Latin) in standard words
+        if re.search(r'[a-zA-Z][\u0400-\u04FF]|[a-zA-Z][\u0370-\u03FF]|[\u0400-\u04FF][a-zA-Z]|[\u0370-\u03FF][a-zA-Z]', text):
+             self.findings.append("Detected mixed character sets (homoglyph attack likely).")
+             score += 0.6
+             
+        return min(score, 1.0)
+        
     def get_findings(self) -> List[str]:
         return self.findings
 
@@ -198,7 +255,8 @@ class TextAnalysisEngine(AnalysisEngine):
         strategies = [
             UrgencyDetectionStrategy(),
             AuthorityImpersonationStrategy(),
-            MaliciousLinkStrategy()
+            MaliciousLinkStrategy(),
+            ObfuscationDetectionStrategy()
         ]
         self.scanner = SocialEngineeringScanner(strategies)
 

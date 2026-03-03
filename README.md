@@ -38,10 +38,11 @@ Este proyecto ha sido construido bajo los principios de **Arquitectura Limpia (C
 
 Hemos realizado actualizaciones críticas para mejorar la robustez y facilidad de uso:
 
-1.  **Integración de Análisis de Texto:** Se ha conectado el motor de análisis de texto (Strategy Pattern) con la API principal. Ahora el endpoint `/analyze` soporta `artifact_type: "TEXT"`.
+1.  **Integración de Análisis de Texto Avanzado:** Se ha conectado el motor de análisis de texto (Strategy Pattern) con la API principal. Ahora el endpoint `/analyze` soporta `artifact_type: "TEXT"` y utiliza análisis semántico difuso (_Fuzzy Matching_) en lugar de simples expresiones regulares.
 2.  **Gestión de Dependencias:** Corrección de problemas de compatibilidad en Windows/Python 3.12+ ajustando versiones de `pydantic`.
 3.  **Licenciamiento:** Adición del archivo `LICENSE` (MIT) para claridad legal.
-4.  **Testing Reforzado:** Nuevas pruebas de integración para validar la detección de urgencia en textos.
+4.  **Anti-Ofuscación:** Nueva estrategia `ObfuscationDetectionStrategy` capaz de detectar intentos de evasión en el texto (caracteres invisibles, homoglifos, espaciado irregular).
+5.  **Testing Reforzado:** Nuevas pruebas de integración para validar la detección de urgencia semántica y tácticas de ofuscación.
 
 ### 🛡️ Mejoras Recientes (Security & Architecture Hardening)
 
@@ -254,9 +255,10 @@ Hemos implementado un sistema flexible basado en el **Patrón de Diseño Strateg
 
 ### Estrategias Incluidas:
 
-1.  **🚨 UrgencyDetectionStrategy:** Detecta lenguaje de urgencia o miedo (ej. "acción requerida", "inmediato") para presionar a la víctima.
-2.  **👔 AuthorityImpersonationStrategy:** Identifica intentos de suplantación de identidad de altos cargos (CEO, RRHH, TI) combinados con exigencias.
-3.  **🔗 MaliciousLinkStrategy:** Extrae y analiza URLs en el texto, detectando ofuscación y estructuras sospechosas.
+1.  **🚨 UrgencyDetectionStrategy:** Detecta lenguaje de urgencia o miedo. Utiliza **Análisis Semántico Difuso** (Fuzzy Matching) para resistir errores ortográficos o intentos básicos de ofuscación (ej. "urg3nte").
+2.  **👔 AuthorityImpersonationStrategy:** Identifica intentos de suplantación de identidad de altos cargos (CEO, RRHH, TI) combinados con exigencias. También impulsado por Fuzzy Matching.
+3.  **🔗 MaliciousLinkStrategy:** Extrae y analiza URLs en el texto, detectando anomalías, ofuscación y estructuras sospechosas.
+4.  **🛡️ ObfuscationDetectionStrategy:** (Nueva) Estrategia defensiva que clasifica el texto basándose puramente en anomalías estructurales (uso de caracteres de ancho cero, mezcla de alfabetos cirílicos/latinos, espaciado anómalo).
 
 ### Ejemplo de Uso (Python):
 
