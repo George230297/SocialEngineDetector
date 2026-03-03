@@ -152,7 +152,7 @@ social_eng_detector/
 1.  **Clonar el repositorio:**
 
     ```bash
-    git clone https://github.com/George230297/social_eng_detector.git
+    git clone https://github.com/George230297/SocialEngineDetector.git
     cd social_eng_detector
     ```
 
